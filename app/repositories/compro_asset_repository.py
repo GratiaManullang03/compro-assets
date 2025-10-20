@@ -127,15 +127,25 @@ class ComproAssetRepository(BaseRepository[ComproAsset]):
                 detail=f"Database error occurred: {str(e)}"
             )
 
+    def get_model_by_id(self, db: Session, ca_id: int) -> Optional[ComproAsset]:
+        """
+        Get compro asset SQLAlchemy model object by ID
+        Used for update and delete operations
+        """
+        return db.query(ComproAsset).filter(ComproAsset.ca_id == ca_id).first()
+
     def update(self, db: Session, ca_id: int, data: dict) -> Optional[ComproAsset]:
         """Update compro asset"""
         try:
-            db_obj = self.get_by_id(db, ca_id)
+            # Query the actual SQLAlchemy model object, not dict
+            db_obj = self.get_model_by_id(db, ca_id)
             if not db_obj:
                 return None
 
+            # Update only the fields that are provided
             for key, value in data.items():
-                setattr(db_obj, key, value)
+                if hasattr(db_obj, key):
+                    setattr(db_obj, key, value)
 
             db.commit()
             db.refresh(db_obj)
@@ -162,7 +172,8 @@ class ComproAssetRepository(BaseRepository[ComproAsset]):
     def delete(self, db: Session, ca_id: int) -> bool:
         """Delete compro asset"""
         try:
-            db_obj = self.get_by_id(db, ca_id)
+            # Query the actual SQLAlchemy model object, not dict
+            db_obj = self.get_model_by_id(db, ca_id)
             if not db_obj:
                 return False
 
