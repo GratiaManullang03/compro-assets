@@ -1,7 +1,7 @@
 """
 Compro Assets Model
 """
-from sqlalchemy import Column, BigInteger, Text, TIMESTAMP, ARRAY, text
+from sqlalchemy import Column, BigInteger, Integer, Text, TIMESTAMP, ARRAY, ForeignKey, text
 from atams.db.base import Base
 
 
@@ -19,6 +19,9 @@ class ComproAsset(Base):
     ca_image_carousel = Column(ARRAY(Text), nullable=True, default=[], server_default=text("'{}'"))
     ca_subtitle = Column(Text, nullable=True)
     ca_link = Column(Text, nullable=True)
+
+    # Foreign key to category
+    ca_cc_id = Column(Integer, ForeignKey("compro.compro_category.cc_id"), nullable=True)
 
     # Audit columns
     created_at = Column(TIMESTAMP, nullable=False, server_default=text("NOW()"))

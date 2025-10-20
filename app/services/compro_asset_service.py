@@ -19,15 +19,15 @@ class ComproAssetService:
     def get_all_assets(self, db: Session) -> List[ComproAssetList]:
         """
         Get all assets (public endpoint)
-        Returns simplified list view
+        Returns simplified list view with category info
         """
         assets = self.repository.get_all(db)
-        return [ComproAssetList.model_validate(asset) for asset in assets]
+        return [ComproAssetList(**asset) for asset in assets]
 
     def get_asset_by_id(self, db: Session, ca_id: int) -> ComproAsset:
         """
         Get asset by ID (public endpoint)
-        Returns full detail
+        Returns full detail with category info
         """
         asset = self.repository.get_by_id(db, ca_id)
         if not asset:
@@ -35,7 +35,7 @@ class ComproAssetService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Asset with ID {ca_id} not found"
             )
-        return ComproAsset.model_validate(asset)
+        return ComproAsset(**asset)
 
     def create_asset(
         self,
@@ -45,15 +45,8 @@ class ComproAssetService:
     ) -> ComproAsset:
         """
         Create new asset
-        Requires role_level >= 10
+        Authorization already validated by endpoint dependency
         """
-        # Validate role level
-        if current_user.get("role_level", 0) < 10:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Insufficient permission. Required role level: 10"
-            )
-
         # Prepare data with audit fields (only created_by, created_at handled by DB default)
         data = asset_data.model_dump()
         data["created_by"] = current_user.get("username", "system")
@@ -73,15 +66,8 @@ class ComproAssetService:
     ) -> ComproAsset:
         """
         Update existing asset
-        Requires role_level >= 10
+        Authorization already validated by endpoint dependency
         """
-        # Validate role level
-        if current_user.get("role_level", 0) < 10:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Insufficient permission. Required role level: 10"
-            )
-
         # Check if asset exists
         existing = self.repository.get_by_id(db, ca_id)
         if not existing:
@@ -103,20 +89,12 @@ class ComproAssetService:
     def delete_asset(
         self,
         db: Session,
-        ca_id: int,
-        current_user: dict
+        ca_id: int
     ) -> None:
         """
         Delete asset
-        Requires role_level >= 10
+        Authorization already validated by endpoint dependency
         """
-        # Validate role level
-        if current_user.get("role_level", 0) < 10:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Insufficient permission. Required role level: 10"
-            )
-
         # Check if asset exists
         existing = self.repository.get_by_id(db, ca_id)
         if not existing:

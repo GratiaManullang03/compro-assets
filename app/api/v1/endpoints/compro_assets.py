@@ -12,7 +12,7 @@ from app.db.session import get_db
 from app.services.compro_asset_service import ComproAssetService
 from app.schemas.compro_asset import ComproAsset, ComproAssetCreate, ComproAssetUpdate, ComproAssetList
 from app.schemas.common import DataResponse
-from app.api.deps import require_auth
+from app.api.deps import require_auth, require_min_role_level
 
 router = APIRouter()
 service = ComproAssetService()
@@ -68,7 +68,8 @@ async def get_asset(ca_id: int, db: Session = Depends(get_db)):
 @router.post(
     "/",
     response_model=DataResponse[ComproAsset],
-    status_code=status.HTTP_201_CREATED
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_min_role_level(10))]
 )
 async def create_asset(
     asset: ComproAssetCreate,
@@ -96,7 +97,8 @@ async def create_asset(
 @router.put(
     "/{ca_id}",
     response_model=DataResponse[ComproAsset],
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_min_role_level(10))]
 )
 async def update_asset(
     ca_id: int,
@@ -126,7 +128,8 @@ async def update_asset(
 @router.delete(
     "/{ca_id}",
     response_model=DataResponse[None],
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_200_OK,
+    dependencies=[Depends(require_min_role_level(10))]
 )
 async def delete_asset(
     ca_id: int,
@@ -144,7 +147,7 @@ async def delete_asset(
     - Raises 404 if not found
     - Raises 403 if insufficient permission
     """
-    service.delete_asset(db, ca_id, current_user)
+    service.delete_asset(db, ca_id)
     return DataResponse(
         success=True,
         message="Asset deleted successfully",
